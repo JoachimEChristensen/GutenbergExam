@@ -1,0 +1,15 @@
+CREATE (
+   :Books
+   { 	
+      BookName:
+      BookAuthor:
+   }
+)
+
+CREATE (
+   :Cities
+   {
+      CityName:
+      CityGeolocation:
+   }
+}
