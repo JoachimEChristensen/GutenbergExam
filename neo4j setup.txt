@@ -7,6 +7,14 @@ CREATE (
 )
 
 CREATE (
+   :BooksText
+   { 	
+      NameOrId:
+      Text:
+   }
+)
+
+CREATE (
    :Cities
    {
       CityName:
