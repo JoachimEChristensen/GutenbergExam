@@ -1,12 +1,15 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using MySql.Data.MySqlClient;
+using Neo4j.Driver.V1;
 
 namespace BookLoader
 {
     class Program
     {
         private static readonly string _connectionString = "Server=127.0.0.1;Port=3306;Database=exam;Uid=root;Pwd=;";
+        private static IDriver _driver;
 
         static void Main(string[] args)
         {
@@ -27,6 +30,12 @@ namespace BookLoader
         }
 
         static void InsertBook(string nameOrId, string text)
+        {
+            InsertBookSql(nameOrId, text);
+            InsertBookNeo4J(nameOrId, text);
+        }
+
+        static void InsertBookSql(string nameOrId, string text)
         {
             using (MySqlConnection connection = new MySqlConnection(_connectionString))
             {
@@ -66,6 +75,21 @@ namespace BookLoader
                     }
                 }
             }
+        }
+
+        static void InsertBookNeo4J(string nameOrId, string text)
+        {
+            _driver = GraphDatabase.Driver("bolt://localhost:7687", AuthTokens.Basic("neo4j", "cakefish"));
+
+            using (var session = _driver.Session())
+            {
+                session.Run("CREATE (a:Book {NameOrId: $nameOrId, Text: $text})", new { nameOrId, text });
+            }
+        }
+
+        public void Dispose()
+        {
+            _driver?.Dispose();
         }
     }
 }
