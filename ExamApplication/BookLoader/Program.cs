@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using MySql.Data.MySqlClient;
 using Neo4j.Driver.V1;
 
@@ -9,30 +13,54 @@ namespace BookLoader
     class Program
     {
         private static readonly string _connectionString = "Server=127.0.0.1;Port=3306;Database=exam;Uid=root;Pwd=;";
-        private static IDriver _driver;
+        private static IMongoDatabase _mongoDatabase;
+        private static IMongoCollection<BsonDocument> _mongoCollection;
+        private static readonly HashSet<string> BookSql = new HashSet<string>();
+        private static readonly HashSet<string> BookMongoDb = new HashSet<string>();
 
-        static void Main(string[] args)
+        static void Main()
+        {
+            MainAsync().Wait();
+        }
+
+        static async Task MainAsync()
         {
             string[] filePaths = Directory.GetFiles(@"D:\Desktop\kage\Downloads\archive\root\zipfiles\", "*.txt", SearchOption.AllDirectories);
             int count = 1;
 
+            Console.WriteLine("Checking for existing books.");
+            CheckBook();
             foreach (string path in filePaths)
             {
-                string readText = File.ReadAllText(path);
                 string fileName = Path.GetFileName(path);
                 fileName = fileName.Substring(0, fileName.Length - 4);
 
-                InsertBook(fileName, readText);
+                bool existSql = BookSql.Contains(fileName);
+                bool existMongoDb = BookMongoDb.Contains(fileName);
 
-                Console.WriteLine("The book: " + fileName + " have been added, there is now: " + (filePaths.Length - count) + " books left");
+                if (!existSql || !existMongoDb)
+                {
+                    string readText = File.ReadAllText(path);
+
+                    await InsertBook(fileName, readText, existSql, existMongoDb);
+
+                    Console.WriteLine("ID: " + fileName + ", left: " + (filePaths.Length - count) + ", in DB: " + count);
+                }
+
                 count++;
             }
         }
 
-        static void InsertBook(string nameOrId, string text)
+        static async Task InsertBook(string nameOrId, string text, bool existSql, bool existMongoDb)
         {
-            InsertBookSql(nameOrId, text);
-            InsertBookNeo4J(nameOrId, text);
+            if (!existSql)
+            {
+                InsertBookSql(nameOrId, text);
+            }
+            if (!existMongoDb)
+            {
+                await InsertBookMongoDb(nameOrId, text);
+            }
         }
 
         static void InsertBookSql(string nameOrId, string text)
@@ -77,19 +105,92 @@ namespace BookLoader
             }
         }
 
-        static void InsertBookNeo4J(string nameOrId, string text)
+        static async Task InsertBookMongoDb(string nameOrId, string text)
         {
-            _driver = GraphDatabase.Driver("bolt://localhost:7687", AuthTokens.Basic("neo4j", "cakefish"));
+            string connectionString = "mongodb://10.0.75.2:27017";
+            MongoClient mongoClient = new MongoClient(connectionString);
 
-            using (var session = _driver.Session())
-            {
-                session.Run("CREATE (a:Book {NameOrId: $nameOrId, Text: $text})", new { nameOrId, text });
-            }
+            _mongoDatabase = mongoClient.GetDatabase("exam");
+            _mongoCollection = _mongoDatabase.GetCollection<BsonDocument>("BooksText");
+
+            await _mongoCollection.InsertOneAsync(new BsonDocument { {"NameOrId", nameOrId}, {"Text", text} });
         }
 
-        public void Dispose()
+        static void CheckBook()
         {
-            _driver?.Dispose();
+            BookSql.UnionWith(ChechBookSql());
+            BookMongoDb.UnionWith(CheckBookMongoDb());
+        }
+
+        static List<string> ChechBookSql()
+        {
+            List<string> books = new List<string>();
+
+            using (MySqlConnection connection = new MySqlConnection(_connectionString))
+            {
+                MySqlCommand command = new MySqlCommand { Connection = connection };
+
+                try
+                {
+                    command.CommandText = "select NameOrId FROM bookstext;";
+
+                    connection.Open();
+                    var reader = command.ExecuteReader();
+
+                    //transaction.Commit();
+
+                    while (reader.Read())
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            if (reader.GetName(i) == "NameOrId")
+                            {
+                                books.Add((string)reader.GetValue(i));
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Commit Exception Type: {0}", ex.GetType());
+                    Console.WriteLine("  Message: {0}", ex.Message);
+                }
+            }
+
+            return books;
+        }
+
+        static List<string> CheckBookMongoDb()
+        {
+            List<string> books = new List<string>();
+
+            string connectionString = "mongodb://10.0.75.2:27017";
+            MongoClient mongoClient = new MongoClient(connectionString);
+
+            _mongoDatabase = mongoClient.GetDatabase("exam");
+            _mongoCollection = _mongoDatabase.GetCollection<BsonDocument>("BooksText");
+
+            var project = new BsonDocument
+            {
+                {
+                    "$project",
+                    new BsonDocument
+                    {
+                        {"_id", 0},
+                        {"NameOrId", 1}
+                    }
+                }
+            };
+
+            var pipeline = new[] { project };
+            var result = _mongoCollection.Aggregate<BsonDocument>(pipeline);
+
+            foreach (var res in result.ToListAsync().Result)
+            {
+                books.Add(res["NameOrId"].AsString);
+            }
+
+            return books;
         }
     }
 }
