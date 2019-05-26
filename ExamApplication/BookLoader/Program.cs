@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MySql.Data.MySqlClient;
-using Neo4j.Driver.V1;
 
 namespace BookLoader
 {
