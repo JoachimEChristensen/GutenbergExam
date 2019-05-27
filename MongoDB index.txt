@@ -1,0 +1,3 @@
+db.BooksText.createIndex({Text: "text"})
+
+db.BooksText.createIndex({NameOrId: 1})
