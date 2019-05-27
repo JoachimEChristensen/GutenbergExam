@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MySql.Data.MySqlClient;
 
-namespace BookLoader
+namespace DataLoader
 {
-    static class CityInsert
+    static class City
     {
         private static IMongoDatabase _mongoDatabase;
         private static IMongoCollection<BsonDocument> _mongoCollection;

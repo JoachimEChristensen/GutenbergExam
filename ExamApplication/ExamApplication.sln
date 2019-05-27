@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.28307.106
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExamApplication", "ExamApplication\ExamApplication.csproj", "{B0B752CF-0033-452E-BB39-67724B8CC603}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookLoader", "BookLoader\BookLoader.csproj", "{7205CD4E-797B-417F-B23B-9A6A1476A636}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataLoader", "DataLoader\DataLoader.csproj", "{7205CD4E-797B-417F-B23B-9A6A1476A636}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

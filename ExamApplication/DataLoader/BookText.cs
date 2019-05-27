@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MySql.Data.MySqlClient;
 
-namespace BookLoader
+namespace DataLoader
 {
-    class Program
+    class BookText
     {
         private static readonly string _connectionString = "Server=127.0.0.1;Port=3306;Database=exam;Uid=root;Pwd=;";
         private static IMongoDatabase _mongoDatabase;
@@ -17,19 +17,7 @@ namespace BookLoader
         private static readonly HashSet<string> BookSql = new HashSet<string>();
         private static readonly HashSet<string> BookMongoDb = new HashSet<string>();
 
-        static void Main()
-        {
-            MainAsync().Wait();
-        }
-
-        static async Task MainAsync()
-        {
-            //await CityInsert.Insert();
-
-            await Book();
-        }
-
-        static async Task Book()
+        public static async Task Insert()
         {
             //Change so that it leads to the location of the books on your PC
             string[] filePaths = Directory.GetFiles(@"D:\Desktop\kage\Downloads\archive\root\zipfiles\", "*.txt", SearchOption.AllDirectories);
