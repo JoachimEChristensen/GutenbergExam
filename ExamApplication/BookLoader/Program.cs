@@ -24,6 +24,14 @@ namespace BookLoader
 
         static async Task MainAsync()
         {
+            //await CityInsert.Insert();
+
+            await Book();
+        }
+
+        static async Task Book()
+        {
+            //Change so that it leads to the location of the books on your PC
             string[] filePaths = Directory.GetFiles(@"D:\Desktop\kage\Downloads\archive\root\zipfiles\", "*.txt", SearchOption.AllDirectories);
             int count = 1;
 
