@@ -19,7 +19,9 @@ namespace DataLoader
         {
             //await City.Insert();
 
-            await BookText.Insert();
+            //await BookText.Insert();
+
+            //await BookInfo.Insert();
         }
 
         
