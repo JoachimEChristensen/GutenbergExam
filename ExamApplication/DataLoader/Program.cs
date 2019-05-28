@@ -17,7 +17,7 @@ namespace DataLoader
 
         static async Task MainAsync()
         {
-            //await City.Insert();
+            //await City.Insert();// a list of cities and their location
 
             //await BookText.Insert();
 

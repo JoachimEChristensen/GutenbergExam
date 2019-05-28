@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using MongoDB.Bson;
@@ -31,8 +32,8 @@ namespace DataLoader
                     name = values[1];
                     asciiname = values[2];
                     alternatenames = values[3];
-                    decimal.TryParse(values[4], out latitude);
-                    decimal.TryParse(values[5], out longitude);
+                    decimal.TryParse(values[4], NumberStyles.Any, CultureInfo.InvariantCulture, out latitude);
+                    decimal.TryParse(values[5], NumberStyles.Any, CultureInfo.InvariantCulture, out longitude);
                     char.TryParse(values[6], out fclass);
                     fcode = values[7];
                     country = values[8];
