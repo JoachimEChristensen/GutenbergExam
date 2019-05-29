@@ -24,10 +24,12 @@ namespace ExamApplication
         [WebMethod]
         public void GetBooksByCity()
         {
+            //Input connectionString i web.config
             string connection = ConfigurationManager.ConnectionStrings["DBconnection"].ConnectionString;
             List<Book> books = new List<Book>();
             using (SqlConnection con = new SqlConnection(connection))
             {
+                //Input SQL Commands
                 SqlCommand cmd = new SqlCommand("SQL Command", con);
                 cmd.CommandType = CommandType.Text;
                 con.Open();
