@@ -1,8 +1,12 @@
 # GutenbergExam
 Group: CJX
 
-Members: Joachim Ellingsgaard Christensen
+Members: 
+
+Joachim Ellingsgaard Christensen
+
 Christian Philip Ege Østergaard Nielsen
+
 Xinkai Huang
 
 ## Setup
