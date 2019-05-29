@@ -11,7 +11,8 @@ namespace DataLoader
 {
     class BookText
     {
-        private static readonly string _connectionString = "Server=127.0.0.1;Port=3306;Database=exam;Uid=root;Pwd=;";
+        private static readonly string ConnectionStringSql = "Server=127.0.0.1;Port=3306;Database=exam;Uid=root;Pwd=;";
+        private static readonly string ConnectionStringMongoDb = "mongodb://10.0.75.2:27017";
         private static IMongoDatabase _mongoDatabase;
         private static IMongoCollection<BsonDocument> _mongoCollection;
         private static readonly HashSet<string> BookSql = new HashSet<string>();
@@ -60,13 +61,14 @@ namespace DataLoader
 
         static void InsertBookSql(string nameOrId, string text)
         {
-            using (MySqlConnection connection = new MySqlConnection(_connectionString))
+            using (MySqlConnection connection = new MySqlConnection(ConnectionStringSql))
             {
                 connection.Open();
                 MySqlCommand command = connection.CreateCommand();
                 MySqlTransaction transaction = connection.BeginTransaction();
                 command.Connection = connection;
                 command.Transaction = transaction;
+                command.CommandTimeout = 28800;
 
                 try
                 {
@@ -102,8 +104,7 @@ namespace DataLoader
 
         static async Task InsertBookMongoDb(string nameOrId, string text)
         {
-            string connectionString = "mongodb://10.0.75.2:27017";
-            MongoClient mongoClient = new MongoClient(connectionString);
+            MongoClient mongoClient = new MongoClient(ConnectionStringMongoDb);
 
             _mongoDatabase = mongoClient.GetDatabase("exam");
             _mongoCollection = _mongoDatabase.GetCollection<BsonDocument>("BooksText");
@@ -121,13 +122,14 @@ namespace DataLoader
         {
             List<string> books = new List<string>();
 
-            using (MySqlConnection connection = new MySqlConnection(_connectionString))
+            using (MySqlConnection connection = new MySqlConnection(ConnectionStringSql))
             {
                 MySqlCommand command = new MySqlCommand { Connection = connection };
 
                 try
                 {
                     command.CommandText = "select NameOrId FROM bookstext;";
+                    command.CommandTimeout = 28800;
 
                     connection.Open();
                     var reader = command.ExecuteReader();
@@ -159,8 +161,7 @@ namespace DataLoader
         {
             List<string> books = new List<string>();
 
-            string connectionString = "mongodb://10.0.75.2:27017";
-            MongoClient mongoClient = new MongoClient(connectionString);
+            MongoClient mongoClient = new MongoClient(ConnectionStringMongoDb);
 
             _mongoDatabase = mongoClient.GetDatabase("exam");
             _mongoCollection = _mongoDatabase.GetCollection<BsonDocument>("BooksText");
