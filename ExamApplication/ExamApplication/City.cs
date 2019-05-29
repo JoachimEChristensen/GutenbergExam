@@ -7,12 +7,8 @@ namespace ExamApplication
 {
     public class City
     {
-        private string name;
-        private string location;
-        public City(string newName, string newLocation)
-        {
-            name = newName;
-            location = newLocation;
-        }
+        public string AsciiName { get; set; }
+        public decimal Latitude { get; set; }
+        public decimal Longitude { get; set; }
     }
 }
