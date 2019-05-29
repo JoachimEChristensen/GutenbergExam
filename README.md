@@ -1,4 +1,9 @@
 # GutenbergExam
+Group: CJX
+
+Members: Joachim Ellingsgaard Christensen
+Christian Philip Ege Østergaard Nielsen
+Xinkai Huang
 
 ## Setup
 To run the program completely you have to run it in a specific order. First, you need to set the SQL database up by running DatabaseSetupSQL. The MongoDB Database is set up by running DataLoader, although you need the zipfile with the various books to run it. You also need the cities15000.txt file to ensure that the cities are inserted properly. Make sure to change the paths in the various files to ensure that the program runs correctly.
