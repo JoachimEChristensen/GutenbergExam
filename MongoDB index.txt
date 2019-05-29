@@ -8,9 +8,9 @@ db.Books.createIndex({NameOrId: 1})
 
 db.Books.createIndex({Author: 1})
 
-db.Mentionedcities.createIndex({BookNameOrId: 1}, { unique: true })
+db.Mentionedcities.createIndex({BookNameOrId: 1})
 
-db.Mentionedcities.createIndex({CityName: 1}, { unique: true })
+db.Mentionedcities.createIndex({CityName: 1})
 
 db.geocities15000.createIndex({asciiname: 1})
 
