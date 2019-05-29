@@ -1,4 +1,19 @@
 # GutenbergExam
+Group: CJX
+
+Members: 
+
+Joachim Ellingsgaard Christensen
+
+Christian Philip Ege Østergaard Nielsen
+
+Xinkai Huang
+
+## Setup
+To run the program completely you have to run it in a specific order. First, you need to set the SQL database up by running DatabaseSetupSQL. The MongoDB Database is set up by running DataLoader, although you need the zipfile with the various books to run it. You also need the cities15000.txt file to ensure that the cities are inserted properly. Make sure to change the paths in the various files to ensure that the program runs correctly.
+
+Once the DataLoader is complete, you can run the DataClasses program to test out the queries, and you can run the actual front-end application to try out the queries for yourself.
+
 ## Which database
 We have decided to use MongoDB (A Document Oriented Database) as well as MySQL (A SQL based database) as our two databases to compare. Originally we had planned to use Neo4J, but we decided to change to MongoDB because it was used in a wider context overalll in the real world, so it would make more sense in our minds to use it and MySQL.
 
@@ -10,7 +25,7 @@ The reason why we've done this, is to make it easier to establish connections be
 ## How is it modelled in the Application
 In our application, we retrieve the values that we query, and then insert them into object classes that match the two databases. However, for the city object, we're only interested in the ASCII name and the latitude/longitude values, so those are the only ones featured in the City object.
 
-The data is imported in three separate segments. First, we load the Books. Then, we load the cities. Lastly, we establish the connections between the two databases. This last step took an extremely long time for both databases, so regardless of which database type you would pick, you would still end up with this issue.
+The data is imported in four separate segments. First, we load the cities. Then, we load the text of the books. Then, we load the books' titles and authors. Lastly, we establish the connections between the two databases. This last step took an extremely long time for both databases, so regardless of which database type you would pick, you would still end up with this issue.
 
 ## Behavior of the test set
 Our general results for the two database query sets were done in sets of five. First, we measured the general time it took for the 20 queries. Then, we measured each set of five individually, allowing us the following results:
