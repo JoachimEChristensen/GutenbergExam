@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataClasses
 {
-    class Book
+    public class Book
     {
         public string NameOrId { get; set; }
         public string Title { get; set; }

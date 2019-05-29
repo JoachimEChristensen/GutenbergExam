@@ -5,7 +5,7 @@ using MySql.Data.MySqlClient;
 
 namespace DataClasses
 {
-    class QueriesSql
+    public class QueriesSql
     {
         private static readonly string ConnectionStringSql = "Server=127.0.0.1;Port=3306;Database=exam;Uid=root;Pwd=;";
 

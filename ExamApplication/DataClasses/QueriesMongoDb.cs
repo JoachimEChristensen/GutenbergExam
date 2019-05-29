@@ -7,7 +7,7 @@ using MongoDB.Driver;
 
 namespace DataClasses
 {
-    class QueriesMongoDb
+    public class QueriesMongoDb
     {
         private static readonly string ConnectionStringMongoDb = "mongodb://10.0.75.2:27017";
         private static IMongoDatabase _mongoDatabase;

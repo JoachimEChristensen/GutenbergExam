@@ -1,0 +1,70 @@
+﻿@model IEnumerable<DataClasses.Book>
+@{
+    ViewData["Title"] = "BookAuthorSQL";
+}
+
+<h2>BookAuthorSQL</h2>
+
+@using (Html.BeginForm())
+{
+    <label>Book Author</label>
+    <input type="text" name="bookAuthor" />
+    <input type="submit" value="Search" />
+}
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA5yPzCexn1OnqZLppgDvvUte8rWraO19s"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+<div id="myDiv" style="width:100%;height:400px;"></div>
+
+<script type="text/javascript">
+    function DisplayGoogleMap() {
+
+        //Set the Latitude and Longitude of the Map
+        var myAddress = new google.maps.LatLng(55.6761, 12.5683);
+
+        //Create Options or set different Characteristics of Google Map
+        var mapOptions = {
+            center: myAddress,
+            zoom: 5,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+
+        //Display the Google map in the div control with the defined Options
+        var map = new google.maps.Map(document.getElementById("myDiv"), mapOptions);
+
+        //Set Marker on the Map
+        var model = @Html.Raw(Json.Serialize(ViewBag.cities));
+        for (var i = 0; i < model.length; i++) {
+            var marker = new google.maps.Marker({
+                position: new google.maps.LatLng(model[i].latitude, model[i].longitude),
+                title: model[i].asciiName
+            });
+            marker.setMap(map);
+        }
+    }
+    $( document ).ready(function() {
+        DisplayGoogleMap();
+    });
+</script>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Title)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Title)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

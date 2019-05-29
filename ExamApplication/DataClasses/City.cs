@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DataClasses
 {
-    class City
+    public class City
     {
         public string AsciiName { get; set; }
         public decimal Latitude { get; set; }
