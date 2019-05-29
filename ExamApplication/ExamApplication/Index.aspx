@@ -22,7 +22,7 @@
                         'searching': true,
                         columns: [
                             { 'data': 'Id' },
-                            { 'data': 'Name' },
+                            { 'data': 'Title' },
                             { 'data': 'Author' },
                         ]
                     });
@@ -38,7 +38,7 @@
                 <thead>
                     <tr>
                         <th>Id</th>
-                        <th>Name</th>
+                        <th>Title</th>
                         <th>Author</th>
                     </tr>
                 </thead>

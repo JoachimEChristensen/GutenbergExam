@@ -7,8 +7,8 @@ namespace ExamApplication
 {
     public class City
     {
-        public int Id { get; set; }
-        public string name { get; set; }
-        public string location { get; set; }
+        public string AsciiName { get; set; }
+        public decimal Latitude { get; set; }
+        public decimal Longitude { get; set; }
     }
 }

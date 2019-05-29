@@ -37,9 +37,9 @@ namespace ExamApplication
                 while(reader.Read())
                 {
                     Book book = new Book();
-                    book.Id = Convert.ToInt32(reader["Id"]);
-                    book.name = reader["Name"].ToString();
-                    book.author = reader["Author"].ToString();
+                    book.NameOrId = reader["Id"].ToString();
+                    book.Title = reader["Name"].ToString();
+                    book.Author = reader["Author"].ToString();
                     books.Add(book);
                 }
             }
@@ -61,9 +61,9 @@ namespace ExamApplication
                 while (reader.Read())
                 {
                     City city = new City();
-                    city.Id = Convert.ToInt32(reader["Id"]);
-                    city.name = reader["Name"].ToString();
-                    city.location = reader["Location"].ToString();
+                    city.AsciiName = reader["Name"].ToString();
+                    city.Latitude = Convert.ToInt32(reader["Latitude"]);
+                    city.Longitude = Convert.ToInt32(reader["Longitude"]);
                     cities.Add(city);
                 }
             }
@@ -85,9 +85,9 @@ namespace ExamApplication
                 while (reader.Read())
                 {
                     Book book = new Book();
-                    book.Id = Convert.ToInt32(reader["Id"]);
-                    book.name = reader["Name"].ToString();
-                    book.author = reader["Author"].ToString();
+                    book.NameOrId = reader["Id"].ToString();
+                    book.Title = reader["Name"].ToString();
+                    book.Author = reader["Author"].ToString();
                     books.Add(book);
                 }
             }
@@ -109,9 +109,9 @@ namespace ExamApplication
                 while (reader.Read())
                 {
                     City city = new City();
-                    city.Id = Convert.ToInt32(reader["Id"]);
-                    city.name = reader["Name"].ToString();
-                    city.location = reader["Location"].ToString();
+                    city.AsciiName = reader["Name"].ToString();
+                    city.Latitude = Convert.ToInt32(reader["Latitude"]);
+                    city.Longitude = Convert.ToInt32(reader["Longitude"]);
                     cities.Add(city);
                 }
             }
