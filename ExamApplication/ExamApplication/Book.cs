@@ -6,13 +6,9 @@ using System.Web;
 namespace ExamApplication
 {
     public class Book
-    {
-        private string name;
-        private string author;
-        public Book(string newName, string newAuthor)
-        {
-            name = newName;
-            author = newAuthor;
-        }
+    {      
+        public int Id { get; set; }
+        public string name { get; set; }
+        public string author { get; set; }
     }
 }

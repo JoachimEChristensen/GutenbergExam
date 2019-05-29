@@ -7,12 +7,8 @@ namespace ExamApplication
 {
     public class City
     {
-        private string name;
-        private string location;
-        public City(string newName, string newLocation)
-        {
-            name = newName;
-            location = newLocation;
-        }
+        public int Id { get; set; }
+        public string name { get; set; }
+        public string location { get; set; }
     }
 }
