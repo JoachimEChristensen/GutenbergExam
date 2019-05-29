@@ -1,0 +1,34 @@
+Given a city name your application returns all book titles with corresponding authors that mention this city.:
+
+select BookName, BookAuthor from books join mentionedcities on books.NameOrId = mentionedcities.BookNameOrId where mentionedcities.CityName = 'London';
+
+db.Mentionedcities.aggregate([{$match: { CityName: "London" }},{ $project: { _id:0, BookNameOrId:1}}])
+db.Books.aggregate([{$match: { NameOrId: "11729" }},{ $project: { _id:0, BookName:1, Author:1}}])
+
+
+Given a book title, your application plots all cities mentioned in this book onto a map.:
+
+select asciiname, latitude, longitude from geocities15000 join mentionedcities on geocities15000.asciiname = mentionedcities.CityName join books on mentionedcities.BookNameOrId = books.NameOrId where BookName = 'Around the World in Eighty Days';
+
+db.Books.aggregate([{$match: { BookName: "Around the World in Eighty Days" }},{ $project: { _id:0, NameOrId:1}}])
+db.Mentionedcities.aggregate([{$match: { BookNameOrId: "103" }},{ $project: { _id:0, CityName:1}}])
+db.geocities15000.aggregate([{$match: { asciiname: "San Francisco" }},{ $project: { _id:0, asciiname:1, latitude:1, longitude:1}}])
+
+
+Given an author name your application lists all books written by that author and plots all cities mentioned in any of the books onto a map.:
+
+select asciiname, latitude, longitude, BookName from geocities15000 join mentionedcities on geocities15000.asciiname = mentionedcities.CityName join books on mentionedcities.BookNameOrId = books.NameOrId where BookAuthor = 'Shakespeare, William';
+
+db.Books.aggregate([{$match: { Author: "Shakespeare, William" }},{ $project: { _id:0, NameOrId:1, BookName:1}}])
+db.Mentionedcities.aggregate([{$match: { BookNameOrId: "103" }},{ $project: { _id:0, CityName:1}}])
+db.geocities15000.aggregate([{$match: { asciiname: "San Francisco" }},{ $project: { _id:0, asciiname:1, latitude:1, longitude:1}}])
+
+
+Given a geolocation, your application lists all books mentioning a city in vicinity of the given geolocation.
+
+
+select BookName from books join mentionedcities on books.NameOrId = mentionedcities.BookNameOrId join geocities15000 on mentionedcities.CityName = geocities15000.asciiname where latitude between 37.77493 - 2 and 37.77493 + 2 and longitude between -122.41942 - 2 and -122.41942 + 2;
+
+db.geocities15000.aggregate([{$match: { latitude: {$gte: 37.77493 - 1} }},{$match: { latitude: {$lte: 37.77493 + 1} }},{$match: { longitude: {$gte: -122.41942 - 1} }},{$match: { longitude: {$lte: -122.41942 + 1} }},{ $project: { _id:0, asciiname:1}}])
+db.Mentionedcities.aggregate([{$match: { CityName: "San Francisco" }},{ $project: { _id:0, BookNameOrId:1}}])
+db.Books.aggregate([{$match: { NameOrId: "11510" }},{ $project: { _id:0, BookName:1}}])

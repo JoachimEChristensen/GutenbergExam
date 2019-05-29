@@ -22,8 +22,8 @@ namespace DataLoader
             //await BookText.Insert();
 
             //await BookInfo.Insert();
-        }
 
-        
+            //await MentionedCities.Find();
+        }
     }
 }

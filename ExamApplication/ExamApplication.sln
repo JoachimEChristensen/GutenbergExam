@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExamApplication", "ExamAppl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataLoader", "DataLoader\DataLoader.csproj", "{7205CD4E-797B-417F-B23B-9A6A1476A636}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataClasses", "DataClasses\DataClasses.csproj", "{8B0C5F2E-F190-453E-A507-32CCCC2620EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{7205CD4E-797B-417F-B23B-9A6A1476A636}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7205CD4E-797B-417F-B23B-9A6A1476A636}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7205CD4E-797B-417F-B23B-9A6A1476A636}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B0C5F2E-F190-453E-A507-32CCCC2620EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B0C5F2E-F190-453E-A507-32CCCC2620EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B0C5F2E-F190-453E-A507-32CCCC2620EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B0C5F2E-F190-453E-A507-32CCCC2620EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

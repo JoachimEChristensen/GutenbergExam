@@ -28,9 +28,11 @@ CityGeolocation VARCHAR(100)
 
 DROP TABLE IF EXISTS mentionedCities;
 CREATE TABLE IF NOT EXISTS mentionedCities (
-BookID INT,
-CityID INT
+BookNameOrId VARCHAR(100),
+CityName VARCHAR(200)
 );
+
+ALTER TABLE mentionedcities ADD UNIQUE INDEX bookNameOrIdCityName (BookNameOrId, CityName);
 
 SET GLOBAL max_allowed_packet=1024*1024*1024; 
 
@@ -56,5 +58,13 @@ CREATE TABLE `geocities15000` (
     `gtopo30` INT(11) DEFAULT NULL,
     `timezone` VARCHAR(40) DEFAULT NULL,
     `moddate` DATE DEFAULT NULL,
-    PRIMARY KEY (`geonameid`)
+    PRIMARY KEY (`geonameid`),
+    INDEX (`asciiname`),
+    index (`latitude`, `longitude`)
 )  DEFAULT CHARSET=UTF8;
+
+SET GLOBAL connect_timeout=28800;
+SET GLOBAL wait_timeout=28800;
+SET GLOBAL interactive_timeout=28800;
+set GLOBAL net_write_timeout=28800; 
+set GLOBAL net_read_timeout=28800;
