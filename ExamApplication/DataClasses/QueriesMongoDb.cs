@@ -13,7 +13,7 @@ namespace DataClasses
         private static IMongoDatabase _mongoDatabase;
         private static IMongoCollection<BsonDocument> _mongoCollection;
 
-        public List<Book> City(string cityName)
+        public List<Book> CityOld(string cityName)
         {
             List<Book> booksOut = new List<Book>();
             List<Book> books = new List<Book>();
@@ -102,7 +102,153 @@ namespace DataClasses
             return booksOut;
         }
 
-        public List<City> BookTitle(string bookTitle)
+        public List<Book> City(string cityName)
+        {
+            List<Book> books = new List<Book>();
+
+            MongoClient mongoClient = new MongoClient(ConnectionStringMongoDb);
+
+            _mongoDatabase = mongoClient.GetDatabase("exam");
+            _mongoCollection = _mongoDatabase.GetCollection<BsonDocument>("Mentionedcities");
+
+            /*db.Mentionedcities.aggregate([
+                    {$match: {CityName: "London"}},*/
+            var match = new BsonDocument
+            {
+                {
+                    "$match",
+                    new BsonDocument
+                    {
+                        {"CityName", cityName}
+                    }
+                }
+            };
+
+                    /*{$lookup:
+                         {
+                           from: "Books",
+                           let: {city_NameOrId: "$BookNameOrId"},
+                           pipeline: 
+                           [{
+                               $match: 
+                                    {
+                                        $expr:
+                                            {$eq: ["$NameOrId", "$$city_NameOrId"]}
+                                    }
+                                },
+                                {$project: {_id:0, BookName:1, Author:1}}
+                           ],
+                           as: "books"
+                         }},*/
+            var lookup = new BsonDocument
+            {
+                {
+                    "$lookup",
+                    new BsonDocument
+                    {
+                        {"from", "Books"},
+                        {
+                            "let", 
+                            new BsonDocument
+                            {
+                                {"city_NameOrId", "$BookNameOrId"}
+                            }
+                        },
+                        {
+                            "pipeline",
+                            new BsonArray
+                            {
+                                new BsonDocument
+                                {
+                                    {
+                                        "$match",
+                                        new BsonDocument
+                                        {
+                                            {
+                                                "$expr",
+                                                new BsonDocument
+                                                {
+                                                    {
+                                                        "$eq",
+                                                        new BsonArray
+                                                        {
+                                                            "$NameOrId", "$$city_NameOrId"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                new BsonDocument
+                                {
+                                    {
+                                        "$project",
+                                        new BsonDocument
+                                        {
+                                            {"_id", 0},
+                                            { "BookName", 1},
+                                            { "Author", 1}
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {"as", "books"}
+                    }
+                }
+            };
+
+                     /*{$project: {_id:0, BookNameOrId:0, CityName:0}},*/
+            var project = new BsonDocument
+            {
+                {
+                    "$project",
+                    new BsonDocument
+                    {
+                        {"_id", 0},
+                        {"BookNameOrId", 0},
+                        {"CityName", 0}
+                    }
+                }
+            };
+
+                     /*{$unwind: "$books"},*/
+            var unwind = new BsonDocument
+            {
+                {"$unwind", "$books"}
+            };
+
+                     /*{$replaceRoot: {newRoot: "$books"}}
+                ])*/
+            var replaceRoot = new BsonDocument
+            {
+                {
+                    "$replaceRoot",
+                    new BsonDocument
+                    {
+                        {"newRoot", "$books"}
+                    }
+                }
+            };
+
+            var pipeline = new[] { match, lookup, project, unwind, replaceRoot };
+            var result = _mongoCollection.Aggregate<BsonDocument>(pipeline);
+
+            foreach (var res in result.ToListAsync().Result)
+            {
+                Book book = new Book
+                {
+                    Title = res["BookName"].AsString,
+                    Author = res["Author"].AsString
+                };
+                books.Add(book);
+            }
+
+            return books;
+        }
+
+        public List<City> BookTitleOld(string bookTitle)
         {
             List<City> cities = new List<City>();
             List<City> citiesOut = new List<City>();
@@ -233,7 +379,249 @@ namespace DataClasses
             return citiesOut;
         }
 
-        public (List<City>, List<Book>) BookAuthor(string bookAuthor)
+        public List<City> BookTitle(string bookTitle)
+        {
+            List<City> cities = new List<City>();
+
+            MongoClient mongoClient = new MongoClient(ConnectionStringMongoDb);
+
+            _mongoDatabase = mongoClient.GetDatabase("exam");
+            _mongoCollection = _mongoDatabase.GetCollection<BsonDocument>("Books");
+
+            //{$match: {BookName: "Around the World in Eighty Days"}},
+            var match = new BsonDocument
+            {
+                {
+                    "$match",
+                    new BsonDocument
+                    {
+                        {"BookName", bookTitle}
+                    }
+                }
+            };
+
+            /*{$lookup:
+                    {
+                        from: "Mentionedcities",
+                        let: {book_NameOrId: "$NameOrId"},
+                        pipeline:
+                        [
+                            {$match: {$expr: {$eq: ["$BookNameOrId", "$$book_NameOrId"]}}},
+                            {$project: {_id:0, CityName:1}},
+                            {$lookup:
+                                {
+                                    from: "geocities15000",
+                                    let: {city_CityName: "$CityName"},
+                                    pipeline:
+                                    [
+                                        {$match: {$expr: {$eq: ["$asciiname", "$$city_CityName"]}}},
+                                        {$project: {_id:0, asciiname:1, latitude:1, longitude:1}}
+                                    ],
+                                    as: "geocities"
+                                }}
+                                    
+                        ],
+                        as: "cities"
+                    }
+                },*/
+            var lookup = new BsonDocument
+            {
+                {
+                    "$lookup",
+                    new BsonDocument
+                    {
+                        {"from", "Mentionedcities"},
+                        {
+                            "let",
+                            new BsonDocument
+                            {
+                                {"book_NameOrId", "$NameOrId"}
+                            }
+                        },
+                        {
+                            "pipeline",
+                            new BsonArray
+                            {
+                                new BsonDocument
+                                {
+                                    {
+                                        "$match",
+                                        new BsonDocument
+                                        {
+                                            {
+                                                "$expr",
+                                                new BsonDocument
+                                                {
+                                                    {
+                                                        "$eq",
+                                                        new BsonArray
+                                                        {
+                                                            "$BookNameOrId", "$$book_NameOrId"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                new BsonDocument
+                                {
+                                    {
+                                        "$project",
+                                        new BsonDocument
+                                        {
+                                            {"_id", 0},
+                                            { "CityName", 1}
+                                        }
+                                    }
+                                },
+                                new BsonDocument
+                                {
+                                    {
+                                        "$lookup",
+                                        new BsonDocument
+                                        {
+                                            {"from", "geocities15000"},
+                                            {
+                                                "let",
+                                                new BsonDocument
+                                                {
+                                                    {"city_CityName", "$CityName"}
+                                                }
+                                            },
+                                            {
+                                                "pipeline",
+                                                new BsonArray
+                                                {
+                                                    new BsonDocument
+                                                    {
+                                                        {
+                                                            "$match",
+                                                            new BsonDocument
+                                                            {
+                                                                {
+                                                                    "$expr",
+                                                                    new BsonDocument
+                                                                    {
+                                                                        {
+                                                                            "$eq",
+                                                                            new BsonArray
+                                                                            {
+                                                                                "$asciiname", "$$city_CityName"
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    new BsonDocument
+                                                    {
+                                                        {
+                                                            "$project",
+                                                            new BsonDocument
+                                                            {
+                                                                {"_id", 0},
+                                                                { "asciiname", 1},
+                                                                { "latitude", 1},
+                                                                { "longitude", 1}
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            {"as", "geocities"}
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {"as", "cities"}
+                    }
+                }
+            };
+
+            //{$project: {_id:0, NameOrId:0, BookName:0, Author:0}},
+            var project = new BsonDocument
+            {
+                {
+                    "$project",
+                    new BsonDocument
+                    {
+                        {"_id", 0},
+                        {"NameOrId", 0},
+                        {"BookName", 0},
+                        {"Author", 0}
+                    }
+                }
+            };
+
+            //{$unwind: "$cities"},
+            var unwind = new BsonDocument
+            {
+                {"$unwind", "$cities"}
+            };
+
+            //{$replaceRoot: {newRoot: "$cities"}},
+            var replaceRoot = new BsonDocument
+            {
+                {
+                    "$replaceRoot",
+                    new BsonDocument
+                    {
+                        {"newRoot", "$cities"}
+                    }
+                }
+            };
+
+            //{$project: {CityName:0}},
+            var project2 = new BsonDocument
+            {
+                {
+                    "$project",
+                    new BsonDocument
+                    {
+                        {"CityName", 0}
+                    }
+                }
+            };
+
+            //{$unwind: "$geocities"},
+            var unwind2 = new BsonDocument
+            {
+                {"$unwind", "$geocities"}
+            };
+
+            //{$replaceRoot: {newRoot: "$geocities"}}
+            var replaceRoot2 = new BsonDocument
+            {
+                {
+                    "$replaceRoot",
+                    new BsonDocument
+                    {
+                        {"newRoot", "$geocities"}
+                    }
+                }
+            };
+
+            var pipeline = new[] { match, lookup, project, unwind, replaceRoot, project2, unwind2, replaceRoot2 };
+            var result = _mongoCollection.Aggregate<BsonDocument>(pipeline);
+
+            foreach (var res in result.ToListAsync().Result)
+            {
+                City city = new City
+                {
+                    AsciiName = res["asciiname"].AsString,
+                    Latitude = res["latitude"].AsDecimal,
+                    Longitude = res["longitude"].AsDecimal
+                };
+                cities.Add(city);
+            }
+
+            return cities;
+        }
+
+        public (List<City>, List<Book>) BookAuthorOld(string bookAuthor)
         {
             List<City> cities = new List<City>();
             List<City> citiesOut = new List<City>();
@@ -369,7 +757,283 @@ namespace DataClasses
             return (citiesOut, books);
         }
 
-        public List<Book> CityGeo(decimal cityLatitude, decimal cityLongitude)
+        public (List<City>, List<Book>) BookAuthor(string bookAuthor)
+        {
+            List<City> cities = new List<City>();
+            List<Book> books = new List<Book>();
+
+            MongoClient mongoClient = new MongoClient(ConnectionStringMongoDb);
+
+            _mongoDatabase = mongoClient.GetDatabase("exam");
+            _mongoCollection = _mongoDatabase.GetCollection<BsonDocument>("Books");
+
+            //{$match: {Author: "Shakespeare, William"}},
+            var match = new BsonDocument
+            {
+                {
+                    "$match",
+                    new BsonDocument
+                    {
+                        {"Author", bookAuthor}
+                    }
+                }
+            };
+
+            /*{$lookup:
+                    {
+                        from: "Mentionedcities",
+                        let: {book_NameOrId: "$NameOrId"},
+                        pipeline:
+                        [
+                            {$match: {$expr: {$eq: ["$BookNameOrId", "$$book_NameOrId"]}}},
+                            {$project: {_id:0, CityName:1}},
+                            {$lookup:
+                                {
+                                    from: "geocities15000",
+                                    let: {city_CityName: "$CityName"},
+                                    pipeline:
+                                    [
+                                        {$match: {$expr: {$eq: ["$asciiname", "$$city_CityName"]}}},
+                                        {$project: {_id:0, asciiname:1, latitude:1, longitude:1}}
+                                    ],
+                                    as: "geocities"
+                                }
+                            },
+                            {$project: {CityName:0}},
+                            {$unwind: "$geocities"},
+                            {$replaceRoot: {newRoot: "$geocities"}}
+                        ],
+                        as: "cities"
+                    }
+                },*/
+            var lookup = new BsonDocument
+            {
+                {
+                    "$lookup",
+                    new BsonDocument
+                    {
+                        {"from", "Mentionedcities"},
+                        {
+                            "let",
+                            new BsonDocument
+                            {
+                                {"book_NameOrId", "$NameOrId"}
+                            }
+                        },
+                        {
+                            "pipeline",
+                            new BsonArray
+                            {
+                                new BsonDocument
+                                {
+                                    {
+                                        "$match",
+                                        new BsonDocument
+                                        {
+                                            {
+                                                "$expr",
+                                                new BsonDocument
+                                                {
+                                                    {
+                                                        "$eq",
+                                                        new BsonArray
+                                                        {
+                                                            "$BookNameOrId", "$$book_NameOrId"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                new BsonDocument
+                                {
+                                    {
+                                        "$project",
+                                        new BsonDocument
+                                        {
+                                            {"_id", 0},
+                                            { "CityName", 1}
+                                        }
+                                    }
+                                },
+                                new BsonDocument
+                                {
+                                    {
+                                        "$lookup",
+                                        new BsonDocument
+                                        {
+                                            {"from", "geocities15000"},
+                                            {
+                                                "let",
+                                                new BsonDocument
+                                                {
+                                                    {"city_CityName", "$CityName"}
+                                                }
+                                            },
+                                            {
+                                                "pipeline",
+                                                new BsonArray
+                                                {
+                                                    new BsonDocument
+                                                    {
+                                                        {
+                                                            "$match",
+                                                            new BsonDocument
+                                                            {
+                                                                {
+                                                                    "$expr",
+                                                                    new BsonDocument
+                                                                    {
+                                                                        {
+                                                                            "$eq",
+                                                                            new BsonArray
+                                                                            {
+                                                                                "$asciiname", "$$city_CityName"
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    new BsonDocument
+                                                    {
+                                                        {
+                                                            "$project",
+                                                            new BsonDocument
+                                                            {
+                                                                {"_id", 0},
+                                                                { "asciiname", 1},
+                                                                { "latitude", 1},
+                                                                { "longitude", 1}
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            {"as", "geocities"}
+                                        }
+                                    }
+                                },
+                                new BsonDocument
+                                {
+                                    {
+                                        "$project",
+                                        new BsonDocument
+                                        {
+                                            {"CityName", 0}
+                                        }
+                                    }
+                                },
+                                new BsonDocument
+                                {
+                                    {"$unwind", "$geocities"}
+                                },
+                                new BsonDocument
+                                {
+                                    {
+                                        "$replaceRoot",
+                                        new BsonDocument
+                                        {
+                                            {"newRoot", "$geocities"}
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {"as", "cities"}
+                    }
+                }
+            };
+
+            //{$project: {_id:0, NameOrId:0, Author:0}},
+            var project = new BsonDocument
+            {
+                {
+                    "$project",
+                    new BsonDocument
+                    {
+                        {"_id", 0},
+                        {"NameOrId", 0},
+                        {"Author", 0}
+                    }
+                }
+            };
+
+            //{$replaceRoot: {newRoot: {$mergeObjects: [{$arrayElemAt: ["$cities", 0]}, "$$ROOT"]}}},
+            var replaceRoot = new BsonDocument
+            {
+                {
+                    "$replaceRoot",
+                    new BsonDocument
+                    {
+                        {
+                            "newRoot", 
+                            new BsonDocument
+                            {
+                                {
+                                    "$mergeObjects",
+                                    new BsonArray
+                                    {
+                                        new BsonDocument
+                                        {
+                                            {
+                                                "$arrayElemAt",
+                                                new BsonArray
+                                                {
+                                                    "$cities", 0
+                                                }
+                                            }
+                                        },
+                                        "$$ROOT"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            //{$project: {cities: 0}}
+            var project2 = new BsonDocument
+            {
+                {
+                    "$project",
+                    new BsonDocument
+                    {
+                        {"cities", 0}
+                    }
+                }
+            };
+
+            var pipeline = new[] { match, lookup, project, replaceRoot, project2};
+            var result = _mongoCollection.Aggregate<BsonDocument>(pipeline);
+
+            foreach (var res in result.ToListAsync().Result)
+            {
+                if (res.Contains("asciiname"))
+                {
+                    City city = new City
+                    {
+                        AsciiName = res["asciiname"].AsString,
+                        Latitude = res["latitude"].AsDecimal,
+                        Longitude = res["longitude"].AsDecimal
+                    };
+                    cities.Add(city);
+                }
+
+                Book book = new Book
+                {
+                    Title = res["BookName"].AsString
+                };
+                books.Add(book);
+            }
+
+            return (cities, books);
+        }
+
+        public List<Book> CityGeoOld(decimal cityLatitude, decimal cityLongitude)
         {
             List<City> cities = new List<City>();
             List<Book> books = new List<Book>();
@@ -560,6 +1224,295 @@ namespace DataClasses
             }
 
             return booksOut;
+        }
+
+        public List<Book> CityGeo(decimal cityLatitude, decimal cityLongitude)
+        {
+            List<Book> books = new List<Book>();
+
+            MongoClient mongoClient = new MongoClient(ConnectionStringMongoDb);
+
+            _mongoDatabase = mongoClient.GetDatabase("exam");
+            _mongoCollection = _mongoDatabase.GetCollection<BsonDocument>("geocities15000");
+
+            /*{$match:
+                    {$and:
+                        [
+                            {latitude: {$gte: 37.77493 - 1}},
+                            {latitude: {$lte: 37.77493 + 1}},
+                            {longitude: {$gte: -122.41942 - 1}},
+                            {longitude: {$lte: -122.41942 + 1}}
+                        ]
+                    }
+                },*/
+            var match = new BsonDocument
+            {
+                {
+                    "$match",
+                    new BsonDocument
+                    {
+                        {
+                            "$and",
+                            new BsonArray
+                            {
+                                new BsonDocument
+                                {
+                                    {
+                                        "latitude",
+                                        new BsonDocument
+                                        {
+                                            {"$gte", 37.77493 - 1}
+                                        }
+                                    }
+                                },
+                                new BsonDocument
+                                {
+                                    {
+                                        "latitude",
+                                        new BsonDocument
+                                        {
+                                            {"$lte", 37.77493 + 1}
+                                        }
+                                    }
+                                },
+                                new BsonDocument
+                                {
+                                    {
+                                        "longitude",
+                                        new BsonDocument
+                                        {
+                                            {"$gte", -122.41942 - 1}
+                                        }
+                                    }
+                                },
+                                new BsonDocument
+                                {
+                                    {
+                                        "longitude",
+                                        new BsonDocument
+                                        {
+                                            {"$lte", -122.41942 + 1}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            /*{$lookup:
+                    {
+                        from: "Mentionedcities",
+                        let: {geocities_asciiname: "$asciiname"},
+                        pipeline:
+                        [
+                            {$match: {$expr: {$eq: ["$CityName", "$$geocities_asciiname"]}}},
+                            {$project: {_id:0, BookNameOrId:1}},
+                            {$lookup:
+                                {
+                                    from: "Books",
+                                    let: {city_BookNameOrId: "$BookNameOrId"},
+                                    pipeline:
+                                    [
+                                        {$match: {$expr: {$eq: ["$NameOrId", "$$city_BookNameOrId"]}}},
+                                        {$project: {_id:0, BookName:1}}
+                                    ],
+                                    as: "books"
+                                }
+                            },
+                            {$project: {BookNameOrId:0}}
+                        ],
+                        as: "cities"
+                    }
+                },*/
+            var lookup = new BsonDocument
+            {
+                {
+                    "$lookup",
+                    new BsonDocument
+                    {
+                        {"from", "Mentionedcities"},
+                        {
+                            "let",
+                            new BsonDocument
+                            {
+                                {"geocities_asciiname", "$asciiname"}
+                            }
+                        },
+                        {
+                            "pipeline",
+                            new BsonArray
+                            {
+                                new BsonDocument
+                                {
+                                    {
+                                        "$match",
+                                        new BsonDocument
+                                        {
+                                            {
+                                                "$expr",
+                                                new BsonDocument
+                                                {
+                                                    {
+                                                        "$eq",
+                                                        new BsonArray
+                                                        {
+                                                            "$CityName", "$$geocities_asciiname"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                new BsonDocument
+                                {
+                                    {
+                                        "$project",
+                                        new BsonDocument
+                                        {
+                                            {"_id", 0},
+                                            { "BookNameOrId", 1}
+                                        }
+                                    }
+                                },
+                                new BsonDocument
+                                {
+                                    {
+                                        "$lookup",
+                                        new BsonDocument
+                                        {
+                                            {"from", "Books"},
+                                            {
+                                                "let",
+                                                new BsonDocument
+                                                {
+                                                    {"city_BookNameOrId", "$BookNameOrId"}
+                                                }
+                                            },
+                                            {
+                                                "pipeline",
+                                                new BsonArray
+                                                {
+                                                    new BsonDocument
+                                                    {
+                                                        {
+                                                            "$match",
+                                                            new BsonDocument
+                                                            {
+                                                                {
+                                                                    "$expr",
+                                                                    new BsonDocument
+                                                                    {
+                                                                        {
+                                                                            "$eq",
+                                                                            new BsonArray
+                                                                            {
+                                                                                "$NameOrId", "$$city_BookNameOrId"
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    new BsonDocument
+                                                    {
+                                                        {
+                                                            "$project",
+                                                            new BsonDocument
+                                                            {
+                                                                {"_id", 0},
+                                                                { "BookName", 1}
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            {"as", "books"}
+                                        }
+                                    }
+                                },
+                                new BsonDocument
+                                {
+                                    {
+                                        "$project",
+                                        new BsonDocument
+                                        {
+                                            { "BookNameOrId", 0}
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {"as", "cities"}
+                    }
+                }
+            };
+
+            //{$project: {asciiname:0}},
+            var project = new BsonDocument
+            {
+                {
+                    "$project",
+                    new BsonDocument
+                    {
+                        {"_id", 0},
+                        {"asciiname", 0}
+                    }
+                }
+            };
+
+            //{$unwind: "$cities"},
+            var unwind = new BsonDocument
+            {
+                {"$unwind", "$cities"}
+            };
+
+            //{$replaceRoot: {newRoot: "$cities"}},
+            var replaceRoot = new BsonDocument
+            {
+                {
+                    "$replaceRoot",
+                    new BsonDocument
+                    {
+                        {"newRoot", "$cities"}
+                    }
+                }
+            };
+
+            //{$unwind: "$books"},
+            var unwind2 = new BsonDocument
+            {
+                {"$unwind", "$books"}
+            };
+
+            //{$replaceRoot: {newRoot: "$books"}}
+            var replaceRoot2 = new BsonDocument
+            {
+                {
+                    "$replaceRoot",
+                    new BsonDocument
+                    {
+                        {"newRoot", "$books"}
+                    }
+                }
+            };
+
+            var pipeline = new[] { match, lookup, project, unwind, replaceRoot, unwind2, replaceRoot2 };
+            var result = _mongoCollection.Aggregate<BsonDocument>(pipeline);
+
+            foreach (var res in result.ToListAsync().Result)
+            {
+                Book book = new Book
+                {
+                    Title = res["BookName"].AsString
+                };
+                books.Add(book);
+            }
+
+            return books;
         }
     }
 }

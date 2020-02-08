@@ -5,6 +5,30 @@ select BookName, BookAuthor from books join mentionedcities on books.NameOrId = 
 db.Mentionedcities.aggregate([{$match: { CityName: "London" }},{ $project: { _id:0, BookNameOrId:1}}])
 db.Books.aggregate([{$match: { NameOrId: "11729" }},{ $project: { _id:0, BookName:1, Author:1}}])
 
+one instead of nested:
+db.Mentionedcities.aggregate([
+                    {$match: {CityName: "London"}},
+                    {$lookup:
+					 {
+					   from: "Books",
+					   let: {city_NameOrId: "$BookNameOrId"},
+					   pipeline: 
+					   [{
+						   $match: 
+								{
+									$expr:
+										{$eq: ["$NameOrId", "$$city_NameOrId"]}
+								}
+							},
+							{$project: {_id:0, BookName:1, Author:1}}
+					   ],
+					   as: "books"
+					 }},
+                     {$project: {_id:0, BookNameOrId:0, CityName:0}},
+                     {$unwind: "$books"},
+                     {$replaceRoot: {newRoot: "$books"}}
+                ])
+
 
 Given a book title, your application plots all cities mentioned in this book onto a map.:
 
@@ -14,14 +38,84 @@ db.Books.aggregate([{$match: { BookName: "Around the World in Eighty Days" }},{ 
 db.Mentionedcities.aggregate([{$match: { BookNameOrId: "103" }},{ $project: { _id:0, CityName:1}}])
 db.geocities15000.aggregate([{$match: { asciiname: "San Francisco" }},{ $project: { _id:0, asciiname:1, latitude:1, longitude:1}}])
 
+one instead of nested:
+db.Books.aggregate([
+                {$match: {BookName: "Around the World in Eighty Days"}},
+                {$lookup:
+                    {
+                        from: "Mentionedcities",
+                        let: {book_NameOrId: "$NameOrId"},
+                        pipeline:
+                        [
+                            {$match: {$expr: {$eq: ["$BookNameOrId", "$$book_NameOrId"]}}},
+                            {$project: {_id:0, CityName:1}},
+                            {$lookup:
+                                {
+                                    from: "geocities15000",
+                                    let: {city_CityName: "$CityName"},
+                                    pipeline:
+                                    [
+                                        {$match: {$expr: {$eq: ["$asciiname", "$$city_CityName"]}}},
+                                        {$project: {_id:0, asciiname:1, latitude:1, longitude:1}}
+                                    ],
+                                    as: "geocities"
+                                }}
+                                    
+                        ],
+                        as: "cities"
+                    }
+                },
+                {$project: {_id:0, NameOrId:0, BookName:0, Author:0}},
+                {$unwind: "$cities"},
+                {$replaceRoot: {newRoot: "$cities"}},
+                {$project: {CityName:0}},
+                {$unwind: "$geocities"},
+                {$replaceRoot: {newRoot: "$geocities"}}
+            ])
+
 
 Given an author name your application lists all books written by that author and plots all cities mentioned in any of the books onto a map.:
 
 select asciiname, latitude, longitude, BookName from geocities15000 join mentionedcities on geocities15000.asciiname = mentionedcities.CityName join books on mentionedcities.BookNameOrId = books.NameOrId where BookAuthor = 'Shakespeare, William';
 
-db.Books.aggregate([{$match: { Author: "Shakespeare, William" }},{ $project: { _id:0, NameOrId:1, BookName:1}}])
+db.Books.aggregate([{$match: {Author: "Shakespeare, William"}},{ $project: { _id:0, NameOrId:1, BookName:1}}])
 db.Mentionedcities.aggregate([{$match: { BookNameOrId: "103" }},{ $project: { _id:0, CityName:1}}])
 db.geocities15000.aggregate([{$match: { asciiname: "San Francisco" }},{ $project: { _id:0, asciiname:1, latitude:1, longitude:1}}])
+
+one instead of nested:
+db.Books.aggregate([
+                {$match: {Author: "Shakespeare, William"}},
+                {$lookup:
+                    {
+                        from: "Mentionedcities",
+                        let: {book_NameOrId: "$NameOrId"},
+                        pipeline:
+                        [
+                            {$match: {$expr: {$eq: ["$BookNameOrId", "$$book_NameOrId"]}}},
+                            {$project: {_id:0, CityName:1}},
+                            {$lookup:
+                                {
+                                    from: "geocities15000",
+                                    let: {city_CityName: "$CityName"},
+                                    pipeline:
+                                    [
+                                        {$match: {$expr: {$eq: ["$asciiname", "$$city_CityName"]}}},
+                                        {$project: {_id:0, asciiname:1, latitude:1, longitude:1}}
+                                    ],
+                                    as: "geocities"
+                                }
+                            },
+                            {$project: {CityName:0}},
+                            {$unwind: "$geocities"},
+                            {$replaceRoot: {newRoot: "$geocities"}}
+                        ],
+                        as: "cities"
+                    }
+                },
+                {$project: {_id:0, NameOrId:0, Author:0}},
+                {$replaceRoot: {newRoot: {$mergeObjects: [{$arrayElemAt: ["$cities", 0]}, "$$ROOT"]}}},
+                {$project: {cities: 0}}
+            ])
 
 
 Given a geolocation, your application lists all books mentioning a city in vicinity of the given geolocation.
@@ -29,6 +123,50 @@ Given a geolocation, your application lists all books mentioning a city in vicin
 
 select BookName from books join mentionedcities on books.NameOrId = mentionedcities.BookNameOrId join geocities15000 on mentionedcities.CityName = geocities15000.asciiname where latitude between 37.77493 - 2 and 37.77493 + 2 and longitude between -122.41942 - 2 and -122.41942 + 2;
 
-db.geocities15000.aggregate([{$match: { latitude: {$gte: 37.77493 - 1} }},{$match: { latitude: {$lte: 37.77493 + 1} }},{$match: { longitude: {$gte: -122.41942 - 1} }},{$match: { longitude: {$lte: -122.41942 + 1} }},{ $project: { _id:0, asciiname:1}}])
+db.geocities15000.aggregate([{$match: { latitude: {$gte: 37.77493 - 1} }},{$match: { latitude: {$lte: 37.77493 + 1} }},{$match: { longitude: {$gte: -122.41942 - 1} }},{$match: { longitude: {$lte: -122.41942 + 1} }},{$project: {_id:0, asciiname:1}}])
 db.Mentionedcities.aggregate([{$match: { CityName: "San Francisco" }},{ $project: { _id:0, BookNameOrId:1}}])
-db.Books.aggregate([{$match: { NameOrId: "11510" }},{ $project: { _id:0, BookName:1}}])
+db.Books.aggregate([{$match: { NameOrId: "11510" }},{$project: {_id:0, BookName:1}}])
+
+one instead of nested:
+db.geocities15000.aggregate([
+                {$match:
+                    {$and:
+                        [
+                            {latitude: {$gte: 37.77493 - 1}},
+                            {latitude: {$lte: 37.77493 + 1}},
+                            {longitude: {$gte: -122.41942 - 1}},
+                            {longitude: {$lte: -122.41942 + 1}}
+                        ]
+                    }
+                },
+                {$lookup:
+                    {
+                        from: "Mentionedcities",
+                        let: {geocities_asciiname: "$asciiname"},
+                        pipeline:
+                        [
+                            {$match: {$expr: {$eq: ["$CityName", "$$geocities_asciiname"]}}},
+                            {$project: {_id:0, BookNameOrId:1}},
+                            {$lookup:
+                                {
+                                    from: "Books",
+                                    let: {city_BookNameOrId: "$BookNameOrId"},
+                                    pipeline:
+                                    [
+                                        {$match: {$expr: {$eq: ["$NameOrId", "$$city_BookNameOrId"]}}},
+                                        {$project: {_id:0, BookName:1}}
+                                    ],
+                                    as: "books"
+                                }
+                            },
+                            {$project: {BookNameOrId:0}}
+                        ],
+                        as: "cities"
+                    }
+                },
+                {$project: {asciiname:0}},
+                {$unwind: "$cities"},
+                {$replaceRoot: {newRoot: "$cities"}},
+                {$unwind: "$books"},
+                {$replaceRoot: {newRoot: "$books"}}
+            ])

@@ -20,12 +20,14 @@ namespace DataLoader
         private static IMongoCollection<BsonDocument> _mongoCollection;
         private static readonly HashSet<string> BookSql = new HashSet<string>();
         private static readonly HashSet<string> BookMongoDb = new HashSet<string>();
+        private static readonly HashSet<string> BookTextSql = new HashSet<string>();
+        private static readonly HashSet<string> BookTextMongoDb = new HashSet<string>();
 
         public static async Task Insert()
         {
             Console.WriteLine("Loading file locations.");
             //Change so that it leads to the location of the books on your PC
-            string[] filePaths = Directory.GetFiles(@"D:\Desktop\kage\Downloads\rdf-files\cache\epub\", "*.rdf", SearchOption.AllDirectories);
+            string[] filePaths = Directory.GetFiles(@"D:\Desktop\kage\Downloads\database\rdf-files\cache\epub", "*.rdf", SearchOption.AllDirectories);
             int count = 1;
 
             Console.WriteLine("Checking for existing books.");
@@ -83,11 +85,11 @@ namespace DataLoader
 
         static async Task InsertBook(string nameOrId, string title, string author, bool existSql, bool existMongoDb)
         {
-            if (!existSql)
+            if (!existSql && BookTextSql.Contains(nameOrId))
             {
                 InsertBookSql(nameOrId, title, author);
             }
-            if (!existMongoDb)
+            if (!existMongoDb && BookTextMongoDb.Contains(nameOrId))
             {
                 await InsertBookMongoDb(nameOrId, title, author);
             }
@@ -150,7 +152,10 @@ namespace DataLoader
         static void CheckBook()
         {
             BookSql.UnionWith(ChechBookSql());
+            BookTextSql.UnionWith(ChechBookTextSql());
             BookMongoDb.UnionWith(CheckBookMongoDb());
+            //BookTextMongoDb.UnionWith(CheckBookTextMongoDb());// very slow.
+            BookTextMongoDb.UnionWith(ChechBookTextSql());
         }
 
         static List<string> ChechBookSql()
@@ -168,7 +173,41 @@ namespace DataLoader
                     connection.Open();
                     var reader = command.ExecuteReader();
 
-                    //transaction.Commit();
+                    while (reader.Read())
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            if (reader.GetName(i) == "NameOrId")
+                            {
+                                books.Add((string)reader.GetValue(i));
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Commit Exception Type: {0}", ex.GetType());
+                    Console.WriteLine("  Message: {0}", ex.Message);
+                }
+            }
+
+            return books;
+        }
+
+        static List<string> ChechBookTextSql()
+        {
+            List<string> books = new List<string>();
+
+            using (MySqlConnection connection = new MySqlConnection(_connectionString))
+            {
+                MySqlCommand command = new MySqlCommand { Connection = connection };
+
+                try
+                {
+                    command.CommandText = "select NameOrId FROM bookstext;";
+
+                    connection.Open();
+                    var reader = command.ExecuteReader();
 
                     while (reader.Read())
                     {
@@ -200,6 +239,39 @@ namespace DataLoader
 
             _mongoDatabase = mongoClient.GetDatabase("exam");
             _mongoCollection = _mongoDatabase.GetCollection<BsonDocument>("Books");
+
+            var project = new BsonDocument
+            {
+                {
+                    "$project",
+                    new BsonDocument
+                    {
+                        {"_id", 0},
+                        {"NameOrId", 1}
+                    }
+                }
+            };
+
+            var pipeline = new[] { project };
+            var result = _mongoCollection.Aggregate<BsonDocument>(pipeline);
+
+            foreach (var res in result.ToListAsync().Result)
+            {
+                books.Add(res["NameOrId"].AsString);
+            }
+
+            return books;
+        }
+
+        static List<string> CheckBookTextMongoDb()
+        {
+            List<string> books = new List<string>();
+
+            string connectionString = "mongodb://10.0.75.2:27017";
+            MongoClient mongoClient = new MongoClient(connectionString);
+
+            _mongoDatabase = mongoClient.GetDatabase("exam");
+            _mongoCollection = _mongoDatabase.GetCollection<BsonDocument>("BooksText");
 
             var project = new BsonDocument
             {
